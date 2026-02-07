@@ -2,7 +2,6 @@ import { toast } from "sonner";
 import type { CMSCollection, CMSEntry } from "../../worker/app-controller";
 class CMSService {
   private baseUrl = '/api/cms';
-  private publicUrl = '/api/public/content';
   async getCollections(): Promise<{ success: boolean; data?: CMSCollection[]; error?: string }> {
     try {
       const response = await fetch(`${this.baseUrl}/collections`);
@@ -58,28 +57,6 @@ class CMSService {
       toast.error(message);
       return { success: false, error: message };
     }
-  }
-  async getPublicContent(slug: string): Promise<{ success: boolean; data?: any[]; error?: string }> {
-    try {
-      const response = await fetch(`${this.publicUrl}/${slug}`);
-      if (!response.ok) throw new Error("Failed to fetch public content");
-      return await response.json();
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Network error";
-      return { success: false, error: message };
-    }
-  }
-  async uploadMedia(file: File): Promise<{ success: boolean; data?: any; error?: string }> {
-    // Simulated upload for demonstration
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    return { 
-      success: true, 
-      data: { 
-        id: crypto.randomUUID(), 
-        name: file.name, 
-        url: URL.createObjectURL(file) 
-      } 
-    };
   }
 }
 export const cmsService = new CMSService();

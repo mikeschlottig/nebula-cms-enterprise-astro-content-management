@@ -14,6 +14,9 @@ import '@/index.css'
 import { Dashboard } from '@/pages/Dashboard';
 import { ContentStudio } from '@/pages/ContentStudio';
 import { AIAssistant } from '@/pages/AIAssistant';
+import { CollectionDetail } from '@/pages/CollectionDetail';
+import { EntryEditor } from '@/pages/EntryEditor';
+import { Settings } from '@/pages/Settings';
 const queryClient = new QueryClient();
 const router = createBrowserRouter([
   {
@@ -27,13 +30,28 @@ const router = createBrowserRouter([
     errorElement: <RouteErrorBoundary />,
   },
   {
+    path: "/content/:collectionId",
+    element: <CollectionDetail />,
+    errorElement: <RouteErrorBoundary />,
+  },
+  {
+    path: "/content/:collectionId/entry",
+    element: <EntryEditor />,
+    errorElement: <RouteErrorBoundary />,
+  },
+  {
+    path: "/content/:collectionId/entry/:entryId",
+    element: <EntryEditor />,
+    errorElement: <RouteErrorBoundary />,
+  },
+  {
     path: "/ai",
     element: <AIAssistant />,
     errorElement: <RouteErrorBoundary />,
   },
   {
     path: "/settings",
-    element: <Dashboard />, // Placeholder
+    element: <Settings />,
     errorElement: <RouteErrorBoundary />,
   }
 ]);
