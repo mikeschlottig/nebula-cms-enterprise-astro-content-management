@@ -18,6 +18,10 @@ import { CollectionDetail } from '@/pages/CollectionDetail';
 import { EntryEditor } from '@/pages/EntryEditor';
 import { Settings } from '@/pages/Settings';
 import { MediaLibrary } from '@/pages/MediaLibrary';
+import { DeployedApps } from '@/pages/DeployedApps';
+import { WorkersManager } from '@/pages/WorkersManager';
+import { D1Explorer } from '@/pages/D1Explorer';
+import { R2Browser } from '@/pages/R2Browser';
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -55,6 +59,26 @@ const router = createBrowserRouter([
   {
     path: "/media",
     element: <MediaLibrary />,
+    errorElement: <RouteErrorBoundary />,
+  },
+  {
+    path: "/apps",
+    element: <DeployedApps />,
+    errorElement: <RouteErrorBoundary />,
+  },
+  {
+    path: "/workers",
+    element: <WorkersManager />,
+    errorElement: <RouteErrorBoundary />,
+  },
+  {
+    path: "/d1",
+    element: <D1Explorer />,
+    errorElement: <RouteErrorBoundary />,
+  },
+  {
+    path: "/r2",
+    element: <R2Browser />,
     errorElement: <RouteErrorBoundary />,
   },
   {

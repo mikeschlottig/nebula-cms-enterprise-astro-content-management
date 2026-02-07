@@ -15,16 +15,18 @@ export interface CMSEntry {
   status: 'draft' | 'published';
   updatedAt: number;
 }
+/**
+ * AppController - Handles global CMS state and session orchestration.
+ * Explicitly typed state and ctx inherited from DurableObject base class.
+ */
 export class AppController extends DurableObject<Env> {
   private sessions = new Map<string, SessionInfo>();
   private collections = new Map<string, CMSCollection>();
   private entries = new Map<string, CMSEntry>();
   private loaded = false;
-  constructor(ctx: DurableObjectState, env: Env) {
-    super(ctx, env);
-  }
   private async ensureLoaded(): Promise<void> {
     if (!this.loaded) {
+      // Accessing ctx.storage from the base class
       const storedSessions = await this.ctx.storage.get<Record<string, SessionInfo>>('sessions') || {};
       const storedCollections = await this.ctx.storage.get<Record<string, CMSCollection>>('collections') || {};
       const storedEntries = await this.ctx.storage.get<Record<string, CMSEntry>>('entries') || {};
@@ -41,11 +43,15 @@ export class AppController extends DurableObject<Env> {
       entries: Object.fromEntries(this.entries)
     });
   }
-  // Session Methods
   async addSession(sessionId: string, title?: string): Promise<void> {
     await this.ensureLoaded();
     const now = Date.now();
-    this.sessions.set(sessionId, { id: sessionId, title: title || `Chat ${new Date(now).toLocaleDateString()}`, createdAt: now, lastActive: now });
+    this.sessions.set(sessionId, { 
+      id: sessionId, 
+      title: title || `Chat ${new Date(now).toLocaleDateString()}`, 
+      createdAt: now, 
+      lastActive: now 
+    });
     await this.persist();
   }
   async removeSession(sessionId: string): Promise<boolean> {
@@ -69,9 +75,6 @@ export class AppController extends DurableObject<Env> {
     if (session) { session.title = title; await this.persist(); return true; }
     return false;
   }
-  async getSessionCount(): Promise<number> { await this.ensureLoaded(); return this.sessions.size; }
-  async clearAllSessions(): Promise<number> { await this.ensureLoaded(); const count = this.sessions.size; this.sessions.clear(); await this.persist(); return count; }
-  // CMS Methods
   async createCollection(collection: CMSCollection): Promise<void> {
     await this.ensureLoaded();
     this.collections.set(collection.id, collection);
