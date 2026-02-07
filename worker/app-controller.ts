@@ -15,23 +15,19 @@ export interface CMSEntry {
   status: 'draft' | 'published';
   updatedAt: number;
 }
-/**
- * AppController - Handles global CMS state and session orchestration.
- */
 export class AppController extends DurableObject<Env> {
   private sessions = new Map<string, SessionInfo>();
   private collections = new Map<string, CMSCollection>();
   private entries = new Map<string, CMSEntry>();
   private loaded = false;
-  constructor(state: any, env: Env) {
+  constructor(state: DurableObjectState, env: Env) {
     super(state, env);
   }
   private async ensureLoaded(): Promise<void> {
     if (!this.loaded) {
-      const storage = (this as any).ctx.storage;
-      const storedSessions = await storage.get<Record<string, SessionInfo>>('sessions') || {};
-      const storedCollections = await storage.get<Record<string, CMSCollection>>('collections') || {};
-      const storedEntries = await storage.get<Record<string, CMSEntry>>('entries') || {};
+      const storedSessions = await this.ctx.storage.get<Record<string, SessionInfo>>('sessions') ?? {};
+      const storedCollections = await this.ctx.storage.get<Record<string, CMSCollection>>('collections') ?? {};
+      const storedEntries = await this.ctx.storage.get<Record<string, CMSEntry>>('entries') ?? {};
       this.sessions = new Map(Object.entries(storedSessions));
       this.collections = new Map(Object.entries(storedCollections));
       this.entries = new Map(Object.entries(storedEntries));
@@ -39,8 +35,7 @@ export class AppController extends DurableObject<Env> {
     }
   }
   private async persist(): Promise<void> {
-    const storage = (this as any).ctx.storage;
-    await storage.put({
+    await this.ctx.storage.put({
       sessions: Object.fromEntries(this.sessions),
       collections: Object.fromEntries(this.collections),
       entries: Object.fromEntries(this.entries)
@@ -70,12 +65,19 @@ export class AppController extends DurableObject<Env> {
   async updateSessionActivity(sessionId: string): Promise<void> {
     await this.ensureLoaded();
     const session = this.sessions.get(sessionId);
-    if (session) { session.lastActive = Date.now(); await this.persist(); }
+    if (session) {
+      session.lastActive = Date.now();
+      await this.persist();
+    }
   }
   async updateSessionTitle(sessionId: string, title: string): Promise<boolean> {
     await this.ensureLoaded();
     const session = this.sessions.get(sessionId);
-    if (session) { session.title = title; await this.persist(); return true; }
+    if (session) {
+      session.title = title;
+      await this.persist();
+      return true;
+    }
     return false;
   }
   async createCollection(collection: CMSCollection): Promise<void> {
