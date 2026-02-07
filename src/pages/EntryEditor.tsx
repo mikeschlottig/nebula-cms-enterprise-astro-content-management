@@ -10,40 +10,59 @@ import { Switch } from '@/components/ui/switch';
 import { ChevronLeft, Loader2, Save } from 'lucide-react';
 import { cmsService } from '@/lib/cms';
 import { DatePicker } from '@/components/ui/date-picker';
+import { Skeleton } from '@/components/ui/skeleton';
+interface FormValues {
+  data: Record<string, any>;
+  status: 'draft' | 'published';
+}
 export function EntryEditor() {
   const { collectionId, entryId } = useParams<{ collectionId: string; entryId: string }>();
   const navigate = useNavigate();
-  const { data: collectionsRes } = useQuery({
+  const { data: collectionsRes, isLoading: isCollectionsLoading } = useQuery({
     queryKey: ['collections'],
     queryFn: () => cmsService.getCollections()
   });
   const { data: entriesRes, isLoading: isEntryLoading } = useQuery({
     queryKey: ['entries', collectionId],
     queryFn: () => cmsService.getEntries(collectionId!),
-    enabled: !!entryId
+    enabled: !!entryId && !!collectionId
   });
-  const collection = useMemo(() => 
-    collectionsRes?.data?.find(c => c.id === collectionId), 
+  const collection = useMemo(() =>
+    collectionsRes?.data?.find(c => c.id === collectionId),
     [collectionsRes, collectionId]
   );
-  const existingEntry = useMemo(() => 
+  const existingEntry = useMemo(() =>
     entriesRes?.data?.find(e => e.id === entryId),
     [entriesRes, entryId]
   );
-  const form = useForm({
-    defaultValues: { data: {}, status: 'draft' as const }
+  const form = useForm<FormValues>({
+    defaultValues: { 
+      data: {}, 
+      status: 'draft' 
+    }
   });
   useEffect(() => {
     if (existingEntry) {
       form.reset({
-        data: existingEntry.data,
+        data: existingEntry.data || {},
         status: existingEntry.status
       });
+    } else if (collection) {
+      // Initialize with schema defaults
+      const defaults: Record<string, any> = {};
+      collection.fields.forEach(f => {
+        if (f.type === 'text') defaults[f.name] = "";
+        if (f.type === 'number') defaults[f.name] = 0;
+        if (f.type === 'boolean') defaults[f.name] = false;
+        if (f.type === 'date') defaults[f.name] = Date.now();
+      });
+      form.reset({ data: defaults, status: 'draft' });
     }
-  }, [existingEntry, form]);
-  const onSubmit = async (values: any) => {
+  }, [existingEntry, collection, form]);
+  const onSubmit = async (values: FormValues) => {
+    if (!collectionId) return;
     const res = await cmsService.saveEntry({
-      collectionId: collectionId!,
+      collectionId: collectionId,
       ...values,
       id: entryId
     });
@@ -51,7 +70,24 @@ export function EntryEditor() {
       navigate(`/content/${collectionId}`);
     }
   };
-  if (!collection) return <div>Collection not found</div>;
+  if (isCollectionsLoading || (entryId && isEntryLoading)) {
+    return (
+      <AppLayout>
+        <div className="max-w-4xl mx-auto space-y-8">
+          <Skeleton className="h-8 w-48 bg-white/5" />
+          <Skeleton className="h-[400px] w-full rounded-2xl bg-white/5" />
+        </div>
+      </AppLayout>
+    );
+  }
+  if (!collection) return (
+    <AppLayout>
+      <div className="text-center py-20">
+        <h2 className="text-xl text-white">Collection not found</h2>
+        <Link to="/content" className="text-primary hover:underline mt-4 block">Back to Studio</Link>
+      </div>
+    </AppLayout>
+  );
   return (
     <AppLayout>
       <div className="max-w-4xl mx-auto space-y-8">
@@ -80,18 +116,28 @@ export function EntryEditor() {
                         <FormLabel className="capitalize text-slate-300">{field.name}</FormLabel>
                         <FormControl>
                           {field.type === 'boolean' ? (
-                            <Switch checked={formField.value} onCheckedChange={formField.onChange} />
+                            <Switch 
+                              checked={!!formField.value} 
+                              onCheckedChange={formField.onChange} 
+                            />
                           ) : field.type === 'date' ? (
-                            <DatePicker date={formField.value} setDate={formField.onChange} />
+                            <DatePicker 
+                              date={formField.value} 
+                              setDate={(date) => formField.onChange(date?.getTime())} 
+                            />
                           ) : field.type === 'number' ? (
-                            <Input 
-                              type="number" 
-                              className="bg-white/5 border-white/10 text-white" 
-                              {...formField} 
-                              onChange={(e) => formField.onChange(Number(e.target.value))} 
+                            <Input
+                              type="number"
+                              className="bg-white/5 border-white/10 text-white"
+                              value={formField.value ?? ""}
+                              onChange={(e) => formField.onChange(e.target.value === "" ? 0 : Number(e.target.value))}
                             />
                           ) : (
-                            <Input className="bg-white/5 border-white/10 text-white" {...formField} />
+                            <Input 
+                              className="bg-white/5 border-white/10 text-white" 
+                              {...formField} 
+                              value={formField.value ?? ""}
+                            />
                           )}
                         </FormControl>
                         <FormMessage />
@@ -105,8 +151,8 @@ export function EntryEditor() {
                   render={({ field }) => (
                     <FormItem className="flex flex-row items-center justify-between rounded-lg border border-white/10 p-4">
                       <div className="space-y-0.5">
-                        <FormLabel className="text-white">Publish immediately</FormLabel>
-                        <p className="text-xs text-slate-500">If disabled, this entry will remain as a draft.</p>
+                        <FormLabel className="text-white">Published</FormLabel>
+                        <p className="text-xs text-slate-500">Only published entries are visible via the Public API.</p>
                       </div>
                       <FormControl>
                         <Switch
@@ -121,7 +167,7 @@ export function EntryEditor() {
               <div className="flex justify-end gap-4 border-t border-white/5 pt-8">
                 <Button type="button" variant="ghost" onClick={() => navigate(`/content/${collectionId}`)}>Cancel</Button>
                 <Button type="submit" className="btn-gradient min-w-[120px]">
-                  <Save className="h-4 w-4 mr-2" /> Save Entry
+                  <Save className="h-4 w-4 mr-2" /> {entryId ? 'Update' : 'Save'} Entry
                 </Button>
               </div>
             </form>

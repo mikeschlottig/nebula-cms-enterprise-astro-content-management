@@ -17,7 +17,15 @@ import { AIAssistant } from '@/pages/AIAssistant';
 import { CollectionDetail } from '@/pages/CollectionDetail';
 import { EntryEditor } from '@/pages/EntryEditor';
 import { Settings } from '@/pages/Settings';
-const queryClient = new QueryClient();
+import { MediaLibrary } from '@/pages/MediaLibrary';
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+    }
+  }
+});
 const router = createBrowserRouter([
   {
     path: "/",
@@ -42,6 +50,11 @@ const router = createBrowserRouter([
   {
     path: "/content/:collectionId/entry/:entryId",
     element: <EntryEditor />,
+    errorElement: <RouteErrorBoundary />,
+  },
+  {
+    path: "/media",
+    element: <MediaLibrary />,
     errorElement: <RouteErrorBoundary />,
   },
   {

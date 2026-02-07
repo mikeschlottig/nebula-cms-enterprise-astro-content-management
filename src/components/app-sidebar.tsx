@@ -1,5 +1,5 @@
 import React from "react";
-import { LayoutDashboard, Database, Sparkles, Settings, Terminal, ChevronRight } from "lucide-react";
+import { LayoutDashboard, Database, Sparkles, Settings, Terminal, ChevronRight, Image as ImageIcon } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
@@ -15,6 +15,7 @@ import {
 const items = [
   { title: "Dashboard", icon: LayoutDashboard, url: "/" },
   { title: "Content Studio", icon: Database, url: "/content" },
+  { title: "Media Library", icon: ImageIcon, url: "/media" },
   { title: "Nebula AI", icon: Sparkles, url: "/ai" },
   { title: "Settings", icon: Settings, url: "/settings" },
 ];
@@ -40,7 +41,7 @@ export function AppSidebar(): JSX.Element {
                   isActive={location.pathname === item.url}
                   className={cn(
                     "h-11 px-4 transition-all hover:bg-white/5",
-                    location.pathname === item.url ? "bg-primary/10 text-primary hover:bg-primary/20" : "text-slate-400"
+                    location.pathname === item.url ? "bg-primary/10 text-primary hover:bg-primary/20 font-semibold" : "text-slate-400"
                   )}
                 >
                   <Link to={item.url} className="flex items-center gap-3">
@@ -60,7 +61,7 @@ export function AppSidebar(): JSX.Element {
         <div className="rounded-xl bg-white/5 p-4 border border-white/10">
           <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Cloudflare Tier</p>
           <div className="flex items-center justify-between text-sm text-white">
-            <span>Free Tier</span>
+            <span>Enterprise</span>
             <span className="text-primary font-bold">92%</span>
           </div>
           <div className="mt-2 h-1.5 w-full rounded-full bg-slate-800 overflow-hidden">

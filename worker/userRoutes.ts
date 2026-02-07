@@ -31,9 +31,19 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
         await registerSession(c.env, sessionId, title || firstMessage?.slice(0, 30));
         return c.json({ success: true, data: { sessionId } });
     });
-    app.delete('/api/sessions/:sessionId', async (c) => {
-        const deleted = await unregisterSession(c.env, c.req.param('sessionId'));
-        return c.json({ success: true, data: { deleted } });
+    // Public API for Astro
+    app.get('/api/public/content/:slug', async (c) => {
+        const controller = getAppController(c.env);
+        const slug = c.req.param('slug');
+        const collections = await controller.getCollections();
+        const collection = collections.find(col => col.slug === slug);
+        if (!collection) return c.json({ success: false, error: 'Collection not found' }, 404);
+        const entries = await controller.getEntries(collection.id);
+        const published = entries.filter(e => e.status === 'published');
+        return c.json({ 
+            success: true, 
+            data: published.map(e => ({ id: e.id, ...e.data, updatedAt: e.updatedAt })) 
+        });
     });
     // CMS Routes
     app.get('/api/cms/collections', async (c) => {
@@ -56,7 +66,13 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     app.post('/api/cms/entries', async (c) => {
         const body = await c.req.json();
         const controller = getAppController(c.env);
-        const entry = { ...body, id: crypto.randomUUID(), updatedAt: Date.now() };
+        const entry = { 
+            id: body.id || crypto.randomUUID(), 
+            collectionId: body.collectionId,
+            data: body.data,
+            status: body.status,
+            updatedAt: Date.now() 
+        };
         await controller.createEntry(entry);
         return c.json({ success: true, data: entry });
     });
