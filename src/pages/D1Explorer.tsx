@@ -60,8 +60,8 @@ export function D1Explorer() {
           <div className="p-4 border-b border-white/5 bg-white/5 flex items-center justify-between">
             <span className="text-xs text-slate-500">Query Results ({results?.length || 0} rows)</span>
             <div className="flex gap-2">
-              <Button variant="ghost" size="xs" className="text-[10px] h-6">Export JSON</Button>
-              <Button variant="ghost" size="xs" className="text-[10px] h-6">Export CSV</Button>
+              <Button variant="ghost" size="sm" className="px-2 h-7 text-[10px]">Export JSON</Button>
+              <Button variant="ghost" size="sm" className="px-2 h-7 text-[10px]">Export CSV</Button>
             </div>
           </div>
           <ScrollArea className="flex-1">

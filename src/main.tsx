@@ -16,12 +16,15 @@ import { ContentStudio } from '@/pages/ContentStudio';
 import { AIAssistant } from '@/pages/AIAssistant';
 import { CollectionDetail } from '@/pages/CollectionDetail';
 import { EntryEditor } from '@/pages/EntryEditor';
+import { VectorRAG } from '@/pages/VectorRAG';
+import { SearchEngine } from '@/pages/SearchEngine';
 import { Settings } from '@/pages/Settings';
 import { MediaLibrary } from '@/pages/MediaLibrary';
 import { DeployedApps } from '@/pages/DeployedApps';
 import { WorkersManager } from '@/pages/WorkersManager';
 import { D1Explorer } from '@/pages/D1Explorer';
 import { R2Browser } from '@/pages/R2Browser';
+import { Calendar } from '@/pages/Calendar';
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -57,6 +60,11 @@ const router = createBrowserRouter([
     errorElement: <RouteErrorBoundary />,
   },
   {
+    path: "/calendar",
+    element: <Calendar />,
+    errorElement: <RouteErrorBoundary />,
+  },
+  {
     path: "/media",
     element: <MediaLibrary />,
     errorElement: <RouteErrorBoundary />,
@@ -79,6 +87,16 @@ const router = createBrowserRouter([
   {
     path: "/r2",
     element: <R2Browser />,
+    errorElement: <RouteErrorBoundary />,
+  },
+  {
+    path: "/rag",
+    element: <VectorRAG />,
+    errorElement: <RouteErrorBoundary />,
+  },
+  {
+    path: "/search",
+    element: <SearchEngine />,
     errorElement: <RouteErrorBoundary />,
   },
   {

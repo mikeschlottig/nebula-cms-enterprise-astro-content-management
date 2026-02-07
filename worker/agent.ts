@@ -6,8 +6,6 @@ import { API_RESPONSES } from './config';
 import { createMessage, createStreamResponse, createEncoder } from './utils';
 /**
  * ChatAgent - Main agent class using Cloudflare Agents SDK
- * 
- * Explicit typing of the Agent base class to ensure 'env' and 'state' availability.
  */
 export class ChatAgent extends Agent<Env, ChatState> {
   private chatHandler?: ChatHandler;
@@ -18,10 +16,10 @@ export class ChatAgent extends Agent<Env, ChatState> {
     model: 'google-ai-studio/gemini-2.5-flash'
   };
   async onStart(): Promise<void> {
-    // TypeScript now correctly identifies 'this.env' from the base class Agent<Env, ChatState>
+    const env = (this as any).env as Env;
     this.chatHandler = new ChatHandler(
-      this.env.CF_AI_BASE_URL,
-      this.env.CF_AI_API_KEY,
+      env.CF_AI_BASE_URL,
+      env.CF_AI_API_KEY,
       this.state.model
     );
   }
@@ -33,14 +31,15 @@ export class ChatAgent extends Agent<Env, ChatState> {
         return Response.json({ success: true, data: this.state });
       }
       if (method === 'POST' && url.pathname === '/chat') {
-        return this.handleChatMessage(await request.json());
+        const body = (await request.json()) as { message: string; model?: string; stream?: boolean };
+        return this.handleChatMessage(body);
       }
       if (method === 'DELETE' && url.pathname === '/clear') {
         this.setState({ ...this.state, messages: [] });
         return Response.json({ success: true, data: this.state });
       }
       if (method === 'POST' && url.pathname === '/model') {
-        const { model } = await request.json();
+        const { model } = (await request.json()) as { model: string };
         this.setState({ ...this.state, model });
         this.chatHandler?.updateModel(model);
         return Response.json({ success: true, data: this.state });
@@ -74,6 +73,8 @@ export class ChatAgent extends Agent<Env, ChatState> {
             });
             const assistantMessage = createMessage('assistant', response.content, response.toolCalls);
             this.setState({ ...this.state, messages: [...this.state.messages, assistantMessage], isProcessing: false, streamingMessage: '' });
+          } catch (e) {
+            console.error('Stream processing error:', e);
           } finally {
             writer.close();
           }

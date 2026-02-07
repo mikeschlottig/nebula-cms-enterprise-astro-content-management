@@ -17,19 +17,21 @@ export interface CMSEntry {
 }
 /**
  * AppController - Handles global CMS state and session orchestration.
- * Explicitly typed state and ctx inherited from DurableObject base class.
  */
 export class AppController extends DurableObject<Env> {
   private sessions = new Map<string, SessionInfo>();
   private collections = new Map<string, CMSCollection>();
   private entries = new Map<string, CMSEntry>();
   private loaded = false;
+  constructor(state: any, env: Env) {
+    super(state, env);
+  }
   private async ensureLoaded(): Promise<void> {
     if (!this.loaded) {
-      // Accessing ctx.storage from the base class
-      const storedSessions = await this.ctx.storage.get<Record<string, SessionInfo>>('sessions') || {};
-      const storedCollections = await this.ctx.storage.get<Record<string, CMSCollection>>('collections') || {};
-      const storedEntries = await this.ctx.storage.get<Record<string, CMSEntry>>('entries') || {};
+      const storage = (this as any).ctx.storage;
+      const storedSessions = await storage.get<Record<string, SessionInfo>>('sessions') || {};
+      const storedCollections = await storage.get<Record<string, CMSCollection>>('collections') || {};
+      const storedEntries = await storage.get<Record<string, CMSEntry>>('entries') || {};
       this.sessions = new Map(Object.entries(storedSessions));
       this.collections = new Map(Object.entries(storedCollections));
       this.entries = new Map(Object.entries(storedEntries));
@@ -37,7 +39,8 @@ export class AppController extends DurableObject<Env> {
     }
   }
   private async persist(): Promise<void> {
-    await this.ctx.storage.put({
+    const storage = (this as any).ctx.storage;
+    await storage.put({
       sessions: Object.fromEntries(this.sessions),
       collections: Object.fromEntries(this.collections),
       entries: Object.fromEntries(this.entries)
@@ -46,11 +49,11 @@ export class AppController extends DurableObject<Env> {
   async addSession(sessionId: string, title?: string): Promise<void> {
     await this.ensureLoaded();
     const now = Date.now();
-    this.sessions.set(sessionId, { 
-      id: sessionId, 
-      title: title || `Chat ${new Date(now).toLocaleDateString()}`, 
-      createdAt: now, 
-      lastActive: now 
+    this.sessions.set(sessionId, {
+      id: sessionId,
+      title: title || `Chat ${new Date(now).toLocaleDateString()}`,
+      createdAt: now,
+      lastActive: now
     });
     await this.persist();
   }
