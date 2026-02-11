@@ -1,11 +1,10 @@
 import React from "react";
-import { 
-  LayoutDashboard, 
-  Database, 
-  Sparkles, 
-  Settings, 
-  Terminal, 
-  ChevronRight, 
+import {
+  LayoutDashboard,
+  Database,
+  Sparkles,
+  Settings,
+  Terminal,
   Image as ImageIcon,
   Rocket,
   Cpu,
@@ -13,7 +12,8 @@ import {
   Search,
   BrainCircuit,
   Calendar,
-  ShieldCheck
+  ShieldCheck,
+  Globe
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -43,6 +43,7 @@ const groups = [
     items: [
       { title: "Deployed Apps", icon: Rocket, url: "/apps" },
       { title: "Workers", icon: Cpu, url: "/workers" },
+      { title: "Cloudflare Shell", icon: Terminal, url: "/shell" },
       { title: "D1 Explorer", icon: Layers, url: "/d1" },
       { title: "R2 Browser", icon: Database, url: "/r2" },
     ]
@@ -51,6 +52,7 @@ const groups = [
     label: "Intelligence",
     items: [
       { title: "Nebula AI", icon: Sparkles, url: "/ai" },
+      { title: "SEO x GEO", icon: Globe, url: "/seo-geo" },
       { title: "Vector RAG", icon: BrainCircuit, url: "/rag" },
       { title: "Search Engine", icon: Search, url: "/search" },
     ]
@@ -65,7 +67,9 @@ export function AppSidebar(): JSX.Element {
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary shadow-lg shadow-primary/20 transition-transform group-hover:scale-110">
             <Terminal className="h-5 w-5 text-white" />
           </div>
-          <span className="text-xl font-bold tracking-tight text-white">Nebula<span className="text-primary">.</span></span>
+          <span className="text-xl font-bold tracking-tight text-white">
+            Nebula<span className="text-primary">.</span>
+          </span>
         </Link>
       </SidebarHeader>
       <SidebarContent className="px-3">
@@ -82,7 +86,9 @@ export function AppSidebar(): JSX.Element {
                     isActive={location.pathname === item.url}
                     className={cn(
                       "h-10 px-4 transition-all hover:bg-white/5 rounded-lg",
-                      location.pathname === item.url ? "bg-primary/10 text-primary hover:bg-primary/20 font-semibold" : "text-slate-400"
+                      location.pathname === item.url
+                        ? "bg-primary/10 text-primary hover:bg-primary/20 font-semibold"
+                        : "text-slate-400"
                     )}
                   >
                     <Link to={item.url} className="flex items-center gap-3">
@@ -101,7 +107,16 @@ export function AppSidebar(): JSX.Element {
         <SidebarGroup className="mt-4">
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild className="h-10 px-4 text-slate-400 hover:text-white transition-colors">
+              <SidebarMenuButton
+                asChild
+                isActive={location.pathname === "/settings"}
+                className={cn(
+                  "h-10 px-4 rounded-lg transition-colors",
+                  location.pathname === "/settings"
+                    ? "bg-primary/10 text-primary hover:bg-primary/20 font-semibold"
+                    : "text-slate-400 hover:text-white hover:bg-white/5"
+                )}
+              >
                 <Link to="/settings" className="flex items-center gap-3">
                   <Settings className="h-4 w-4" />
                   <span className="text-sm font-medium">Settings</span>

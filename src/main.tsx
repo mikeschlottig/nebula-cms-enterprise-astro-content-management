@@ -1,8 +1,8 @@
 import '@/lib/errorReporter';
 import { enableMapSet } from "immer";
 enableMapSet();
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
 import {
   createBrowserRouter,
   RouterProvider,
@@ -10,7 +10,7 @@ import {
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
-import '@/index.css'
+import '@/index.css';
 import { Dashboard } from '@/pages/Dashboard';
 import { ContentStudio } from '@/pages/ContentStudio';
 import { AIAssistant } from '@/pages/AIAssistant';
@@ -25,6 +25,8 @@ import { WorkersManager } from '@/pages/WorkersManager';
 import { D1Explorer } from '@/pages/D1Explorer';
 import { R2Browser } from '@/pages/R2Browser';
 import { Calendar } from '@/pages/Calendar';
+import { CloudflareShell } from '@/pages/CloudflareShell';
+import { SeoGeo } from '@/pages/SeoGeo';
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -80,6 +82,16 @@ const router = createBrowserRouter([
     errorElement: <RouteErrorBoundary />,
   },
   {
+    path: "/shell",
+    element: <CloudflareShell />,
+    errorElement: <RouteErrorBoundary />,
+  },
+  {
+    path: "/seo-geo",
+    element: <SeoGeo />,
+    errorElement: <RouteErrorBoundary />,
+  },
+  {
     path: "/d1",
     element: <D1Explorer />,
     errorElement: <RouteErrorBoundary />,
@@ -118,4 +130,4 @@ createRoot(document.getElementById('root')!).render(
       </ErrorBoundary>
     </QueryClientProvider>
   </StrictMode>,
-)
+);
