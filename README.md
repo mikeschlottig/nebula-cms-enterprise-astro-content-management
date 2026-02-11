@@ -1,6 +1,6 @@
 # Cloudflare AI Chat Agent
 
-[cloudflarebutton]
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/mikeschlottig/nebula-cms-enterprise-astro-content-management)
 
 A production-ready full-stack AI chat application built with Cloudflare Workers, Durable Objects, and the Agents SDK. Features multi-session conversations, streaming responses, tool calling (weather, web search, MCP integration), and a modern React frontend.
 
@@ -127,7 +127,7 @@ This builds the frontend, bundles the Worker, and deploys via Wrangler.
    wrangler secret put SERPAPI_KEY
    ```
 
-[cloudflarebutton]
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/mikeschlottig/nebula-cms-enterprise-astro-content-management)
 
 ## 🔧 Extending the App
 
