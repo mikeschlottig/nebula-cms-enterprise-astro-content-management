@@ -78,7 +78,7 @@ function updateWranglerJsonc() {
 
 function runSetupCommands() {
     const commands = [
-    "bun add @tanstack/react-table@^8.20.0",
+    "bun add @tanstack/react-table@^8.20.0 lucide-react@latest agents@latest",
     "bun add lucide-react@latest",
     "bun add agents@latest"
 ];
