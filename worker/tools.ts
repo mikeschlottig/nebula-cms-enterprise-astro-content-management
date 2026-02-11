@@ -44,8 +44,8 @@ const customTools = [
       description: 'Get all content entries for a specific collection',
       parameters: {
         type: 'object',
-        properties: { 
-          collectionId: { type: 'string', description: 'The UUID of the collection' } 
+        properties: {
+          collectionId: { type: 'string', description: 'The UUID of the collection' }
         },
         required: ['collectionId']
       }
@@ -56,7 +56,11 @@ export async function getToolDefinitions() {
   const mcpTools = await mcpManager.getToolDefinitions();
   return [...customTools, ...mcpTools];
 }
-export async function executeTool(name: string, args: Record<string, unknown>, controller?: any): Promise<ToolResult> {
+export async function executeTool(
+  name: string,
+  args: Record<string, unknown>,
+  controller?: any
+): Promise<ToolResult> {
   try {
     switch (name) {
       case 'get_weather':
@@ -72,12 +76,12 @@ export async function executeTool(name: string, args: Record<string, unknown>, c
       }
       case 'list_cms_collections': {
         if (!controller) return { error: 'Controller not available' };
-        const data = await controller.getCollections();
+        const data = await (controller as any).getCollections();
         return { data };
       }
       case 'get_collection_entries': {
         if (!controller) return { error: 'Controller not available' };
-        const data = await controller.getEntries(args.collectionId as string);
+        const data = await (controller as any).getEntries(args.collectionId as string);
         return { data };
       }
       default: {
@@ -86,6 +90,7 @@ export async function executeTool(name: string, args: Record<string, unknown>, c
       }
     }
   } catch (error) {
+    console.error('[tools] executeTool error:', error);
     return { error: error instanceof Error ? error.message : 'Unknown error' };
   }
 }

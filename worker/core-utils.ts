@@ -17,7 +17,7 @@ export function getAppController(env: Env): DurableObjectStub<AppController> {
 export async function registerSession(env: Env, sessionId: string, title?: string): Promise<void> {
   try {
     const controller = getAppController(env);
-    await controller.addSession(sessionId, title);
+    await (controller as any).addSession(sessionId, title);
   } catch (error) {
     console.error('Failed to register session:', error);
   }
@@ -25,7 +25,7 @@ export async function registerSession(env: Env, sessionId: string, title?: strin
 export async function updateSessionActivity(env: Env, sessionId: string): Promise<void> {
   try {
     const controller = getAppController(env);
-    await controller.updateSessionActivity(sessionId);
+    await (controller as any).updateSessionActivity(sessionId);
   } catch (error) {
     console.error('Failed to update session activity:', error);
   }
@@ -33,7 +33,7 @@ export async function updateSessionActivity(env: Env, sessionId: string): Promis
 export async function unregisterSession(env: Env, sessionId: string): Promise<boolean> {
   try {
     const controller = getAppController(env);
-    return await controller.removeSession(sessionId);
+    return await (controller as any).removeSession(sessionId);
   } catch (error) {
     console.error('Failed to unregister session:', error);
     return false;

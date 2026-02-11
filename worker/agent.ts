@@ -1,5 +1,6 @@
 import { Agent } from 'agents';
 import type { Env } from './core-utils';
+import { getAppController } from './core-utils';
 import type { ChatState } from './types';
 import { ChatHandler } from './chat';
 import { API_RESPONSES } from './config';
@@ -51,8 +52,12 @@ export class ChatAgent extends Agent<Env, ChatState> {
     }
   }
   private async handleChatMessage(body: { message: string; model?: string; stream?: boolean }): Promise<Response> {
+    const env = (this as any).env as Env;
+    const controller = getAppController(env);
     const { message, model, stream } = body;
-    if (!message?.trim()) return Response.json({ success: false, error: API_RESPONSES.MISSING_MESSAGE }, { status: 400 });
+    if (!message?.trim()) {
+      return Response.json({ success: false, error: API_RESPONSES.MISSING_MESSAGE }, { status: 400 });
+    }
     if (model && model !== this.state.model) {
       this.setState({ ...this.state, model });
       this.chatHandler?.updateModel(model);
@@ -67,12 +72,25 @@ export class ChatAgent extends Agent<Env, ChatState> {
         (async () => {
           try {
             this.setState({ ...this.state, streamingMessage: '' });
-            const response = await this.chatHandler!.processMessage(message, this.state.messages, (chunk: string) => {
-              this.setState({ ...this.state, streamingMessage: (this.state.streamingMessage || '') + chunk });
-              writer.write(encoder.encode(chunk));
-            });
+            const response = await this.chatHandler!.processMessage(
+              message,
+              this.state.messages,
+              (chunk: string) => {
+                this.setState({
+                  ...this.state,
+                  streamingMessage: (this.state.streamingMessage || '') + chunk
+                });
+                writer.write(encoder.encode(chunk));
+              },
+              controller
+            );
             const assistantMessage = createMessage('assistant', response.content, response.toolCalls);
-            this.setState({ ...this.state, messages: [...this.state.messages, assistantMessage], isProcessing: false, streamingMessage: '' });
+            this.setState({
+              ...this.state,
+              messages: [...this.state.messages, assistantMessage],
+              isProcessing: false,
+              streamingMessage: ''
+            });
           } catch (e) {
             console.error('Stream processing error:', e);
           } finally {
@@ -81,11 +99,12 @@ export class ChatAgent extends Agent<Env, ChatState> {
         })();
         return createStreamResponse(readable);
       }
-      const response = await this.chatHandler!.processMessage(message, this.state.messages);
+      const response = await this.chatHandler!.processMessage(message, this.state.messages, undefined, controller);
       const assistantMessage = createMessage('assistant', response.content, response.toolCalls);
       this.setState({ ...this.state, messages: [...this.state.messages, assistantMessage], isProcessing: false });
       return Response.json({ success: true, data: this.state });
     } catch (error) {
+      console.error('Non-stream processing error:', error);
       this.setState({ ...this.state, isProcessing: false });
       return Response.json({ success: false, error: API_RESPONSES.PROCESSING_ERROR }, { status: 500 });
     }

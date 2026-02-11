@@ -322,9 +322,3 @@ function WorldMap({ points }: { points: GeoPerformancePoint[] }) {
     </div>
   );
 }
-function latencyColor(latencyMs: number): string {
-  if (latencyMs <= 35) return '#34d399';
-  if (latencyMs <= 75) return '#4facfe';
-  if (latencyMs <= 120) return '#F38020';
-  return '#ef4444';
-}

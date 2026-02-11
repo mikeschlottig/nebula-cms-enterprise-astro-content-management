@@ -15,7 +15,8 @@ export class ChatHandler {
   async processMessage(
     message: string,
     conversationHistory: Message[],
-    onChunk?: (chunk: string) => void
+    onChunk?: (chunk: string) => void,
+    controller?: any
   ): Promise<{
     content: string;
     toolCalls?: ToolCall[];
@@ -31,7 +32,7 @@ export class ChatHandler {
         max_completion_tokens: 16000,
         stream: true,
       });
-      return this.handleStreamResponse(stream, message, conversationHistory, onChunk);
+      return this.handleStreamResponse(stream, message, conversationHistory, onChunk, controller);
     }
     const completion = await this.client.chat.completions.create({
       model: this.model,
@@ -41,13 +42,14 @@ export class ChatHandler {
       max_tokens: 16000,
       stream: false
     });
-    return this.handleNonStreamResponse(completion, message, conversationHistory);
+    return this.handleNonStreamResponse(completion, message, conversationHistory, controller);
   }
   private async handleStreamResponse(
     stream: AsyncIterable<OpenAI.Chat.Completions.ChatCompletionChunk>,
     message: string,
     history: Message[],
-    onChunk: (chunk: string) => void
+    onChunk: (chunk: string) => void,
+    controller?: any
   ) {
     let fullContent = '';
     const accumulatedToolCalls: ChatCompletionMessageFunctionToolCall[] = [];
@@ -74,32 +76,61 @@ export class ChatHandler {
       }
     }
     if (accumulatedToolCalls.length > 0) {
-      const executedTools = await this.executeToolCalls(accumulatedToolCalls);
-      const finalResponse = await this.generateToolResponse(message, history, accumulatedToolCalls, executedTools);
+      const executedTools = await this.executeToolCalls(accumulatedToolCalls, controller);
+      const finalResponse = await this.generateToolResponse(
+        message,
+        history,
+        accumulatedToolCalls,
+        executedTools
+      );
       return { content: finalResponse, toolCalls: executedTools };
     }
     return { content: fullContent };
   }
-  private async handleNonStreamResponse(completion: OpenAI.Chat.Completions.ChatCompletion, message: string, history: Message[]) {
+  private async handleNonStreamResponse(
+    completion: OpenAI.Chat.Completions.ChatCompletion,
+    message: string,
+    history: Message[],
+    controller?: any
+  ) {
     const responseMessage = completion.choices[0]?.message;
     if (!responseMessage) return { content: 'Issue processing request.' };
     if (!responseMessage.tool_calls) return { content: responseMessage.content || '' };
-    const toolCalls = await this.executeToolCalls(responseMessage.tool_calls as ChatCompletionMessageFunctionToolCall[]);
-    const finalResponse = await this.generateToolResponse(message, history, responseMessage.tool_calls, toolCalls);
+    const toolCalls = await this.executeToolCalls(
+      responseMessage.tool_calls as ChatCompletionMessageFunctionToolCall[],
+      controller
+    );
+    const finalResponse = await this.generateToolResponse(
+      message,
+      history,
+      responseMessage.tool_calls,
+      toolCalls
+    );
     return { content: finalResponse, toolCalls };
   }
-  private async executeToolCalls(openAiToolCalls: ChatCompletionMessageFunctionToolCall[]): Promise<ToolCall[]> {
-    return Promise.all(openAiToolCalls.map(async (tc) => {
-      try {
-        const args = tc.function.arguments ? JSON.parse(tc.function.arguments) : {};
-        const result = await executeTool(tc.function.name, args);
-        return { id: tc.id, name: tc.function.name, arguments: args, result };
-      } catch (error) {
-        return { id: tc.id, name: tc.function.name, arguments: {}, result: { error: 'Execution failed' } };
-      }
-    }));
+  private async executeToolCalls(
+    openAiToolCalls: ChatCompletionMessageFunctionToolCall[],
+    controller?: any
+  ): Promise<ToolCall[]> {
+    return Promise.all(
+      openAiToolCalls.map(async (tc) => {
+        try {
+          const args = tc.function.arguments ? JSON.parse(tc.function.arguments) : {};
+          const result = await executeTool(tc.function.name, args, controller);
+          return { id: tc.id, name: tc.function.name, arguments: args, result };
+        } catch (error) {
+          console.error('[ChatHandler] Tool execution failed:', error);
+          return { id: tc.id, name: tc.function.name, arguments: {}, result: { error: 'Execution failed' } };
+        }
+      })
+    );
   }
-  private async generateToolResponse(userMessage: string, history: Message[], openAiToolCalls: any[], toolResults: ToolCall[]): Promise<string> {
+  private async generateToolResponse(
+    userMessage: string,
+    history: Message[],
+    openAiToolCalls: any[],
+    toolResults: ToolCall[]
+  ): Promise<string> {
     const followUp = await this.client.chat.completions.create({
       model: this.model,
       messages: [
